@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tunebox</title>
+<style>
+:root{--pri:#7C3AED;--bg:#0B0B0F;--card:#15151C;--tx:#fff;--mut:#A1A1AA;--line:#ffffff14;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 "DM Sans",system-ui,sans-serif;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+header{display:flex;gap:12px;align-items:center;padding:14px 16px;position:sticky;top:env(safe-area-inset-top,0px);background:#0B0B0Fcc;backdrop-filter:blur(12px);z-index:5}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.5px}.logo b{color:var(--pri)}
+header input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:99px;padding:10px 16px}
+.btn{background:var(--pri);border-radius:99px;padding:10px 18px;font-weight:600}.btn.ghost{background:var(--card);border:1px solid var(--line)}.btn.danger{background:#7f1d1d}
+main{max-width:1000px;margin:0 auto;padding:0 16px}
+h1{font-size:clamp(28px,6vw,44px);letter-spacing:-1px;margin:28px 0 4px}h2{font-size:18px;margin:28px 0 12px}
+.sub{color:var(--mut);margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.song{background:var(--card);border-radius:16px;padding:10px;text-align:left;transition:transform .15s}.song:active{transform:scale(.97)}
+.art{aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,var(--pri),#1e1b4b);display:grid;place-items:center;font-size:34px;overflow:hidden;position:relative}
+.art img{width:100%;height:100%;object-fit:cover}
+.song.on .art::after{content:"▶ Playing";position:absolute;inset:auto 8px 8px auto;background:#000a;border-radius:99px;padding:3px 10px;font-size:12px}
+.song h3{margin:10px 0 0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song p{margin:0;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{background:var(--card);border-radius:16px;padding:28px;text-align:center;color:var(--mut)}
+#bar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));background:#1b1b24e6;backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;padding:10px 12px;display:none;z-index:8}
+#bar.show{display:block}
+.row{display:flex;align-items:center;gap:12px}
+.thumb{width:44px;height:44px;border-radius:10px;overflow:hidden;background:var(--pri);flex:none;display:grid;place-items:center}.thumb img{width:100%;height:100%;object-fit:cover}
+.meta{flex:1;min-width:0;text-align:left}.meta b,.meta span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta span{color:var(--mut);font-size:13px}
+.ic{width:40px;height:40px;border-radius:50%;font-size:18px}.play{background:var(--tx);color:#000}
+.seek{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:12px;margin-top:6px}
+input[type=range]{flex:1;accent-color:var(--pri);min-width:0}
+.vol{display:none}
+#full{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));overflow:auto}
+#full.show{display:block}#full .art{max-width:380px;margin:20px auto;font-size:80px}
+#full .ctr{display:flex;justify-content:center;gap:18px;margin:14px 0}#full .ic{width:56px;height:56px;font-size:22px}
+.q{max-width:480px;margin:16px auto}.q button{display:block;width:100%;text-align:left;padding:10px;border-radius:10px}.q button.on{background:var(--card);color:#c4b5fd}
+dialog,.panel{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:20px}
+dialog{width:min(480px,92vw)}dialog::backdrop{background:#000a}
+label{display:block;color:var(--mut);font-size:13px;margin:12px 0 4px}
+.f{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:10px}
+.prog{height:8px;background:var(--bg);border-radius:9px;overflow:hidden;margin-top:12px}.prog i{display:block;height:100%;width:0;background:var(--pri);transition:width .1s}
+.stats{display:flex;gap:12px}.stats div{flex:1;background:var(--card);border-radius:14px;padding:14px}.stats b{font-size:26px;display:block}
+.li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.li .meta{flex:1}
+.toast{position:fixed;top:calc(70px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:#16a34a;border-radius:99px;padding:8px 18px;z-index:30}
+@media(min-width:700px){.vol{display:flex;align-items:center;gap:6px;width:150px}#bar{left:50%;transform:translateX(-50%);width:min(900px,96vw)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<header><span class="logo">tune<b>box</b></span><input id="q" type="search" placeholder="Search songs, artists, albums" aria-label="Search"><button class="btn ghost" id="adminBtn">Admin</button></header>
+<main id="main"></main>
+
+<div id="bar"><div class="row"><button class="row meta" id="open" style="flex:1;min-width:0" aria-label="Open full player"><span class="thumb" id="bt"></span><span class="meta"><b id="bT"></b><span id="bA"></span></span></button>
+<button class="ic" id="prev" aria-label="Previous">⏮</button><button class="ic play" id="pp" aria-label="Play or pause">▶</button><button class="ic" id="next" aria-label="Next">⏭</button>
+<span class="vol"><button id="mute" aria-label="Mute">🔊</button><input id="vol" type="range" min="0" max="1" step=".05" value="1" aria-label="Volume"></span></div>
+<div class="seek"><span id="cur">0:00</span><input id="seek" type="range" min="0" max="100" value="0" step=".1" aria-label="Seek"><span id="dur">0:00</span></div></div>
+
+<div id="full"><button class="btn ghost" id="close">Close</button><div class="art" id="fa"></div><h1 id="fT" style="font-size:26px;text-align:center;margin:0"></h1><p class="sub" id="fA" style="text-align:center"></p>
+<div class="seek" style="max-width:480px;margin:16px auto"><span id="cur2">0:00</span><input id="seek2" type="range" min="0" max="100" value="0" step=".1" aria-label="Seek"><span id="dur2">0:00</span></div>
+<div class="ctr"><button class="ic" id="prev2">⏮</button><button class="ic play" id="pp2">▶</button><button class="ic" id="next2">⏭</button></div>
+<div class="q"><h2>Queue</h2><div id="queue"></div></div></div>
+
+<dialog id="admin"></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<audio id="au" preload="metadata"></audio>
+<script>
+const $=s=>document.querySelector(s),au=$("#au");
+let songs=[],cur=-1,list=[],admin=false,urls={},db;
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=t=>isFinite(t)?Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0"):"0:00";
+// PASTE YOUR SUPABASE VALUES HERE (Project Settings > API). The anon key is safe in the browser.
+const SUPABASE_URL="https://zrgqntxbpcrahtoyrjmu.supabase.co",SUPABASE_KEY="sb_publishable_8rowet0i6tQ13t5FYxlASA_6E7HNIbl";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const norm=r=>({id:r.id,title:r.title,artist:r.artist,album:r.album||"",genre:r.genre||"",desc:r.description||"",cover:r.cover_url||"",audioUrl:r.audio_url,audio_path:r.audio_path,cover_path:r.cover_path,date:Date.parse(r.created_at),plays:r.play_count});
+const open=async()=>{const{data}=await sb.auth.getSession();admin=!!data.session};
+const all=async()=>{const{data,error}=await sb.from("songs").select("*").order("created_at",{ascending:false});return error?[]:data.map(norm)};
+const put=async s=>{await sb.from("songs").update({title:s.title,artist:s.artist,album:s.album}).eq("id",s.id)};
+const del=async id=>{const s=songs.find(x=>x.id===id);if(!s)return;await sb.from("songs").delete().eq("id",id);await sb.storage.from("audio").remove([s.audio_path]);if(s.cover_path)await sb.storage.from("covers").remove([s.cover_path])};
+const url=s=>s.audioUrl;
+const art=s=>s.cover?`<img src="${s.cover}" alt="" loading="lazy">`:"🎵";
+function card(s){return `<button class="song ${songs[cur]&&songs[cur].id===s.id?"on":""}" data-id="${s.id}"><div class="art">${art(s)}</div><h3>${esc(s.title)}</h3><p>${esc(s.artist)}${s.album?" · "+esc(s.album):""}</p></button>`}
+function render(){
+  const t=$("#q").value.trim().toLowerCase();
+  list=songs.filter(s=>!t||[s.title,s.artist,s.album].some(x=>(x||"").toLowerCase().includes(t)));
+  let h="";
+  if(t){h=`<h2>${list.length} result${list.length==1?"":"s"} for “${esc(t)}”</h2>`+(list.length?`<div class="grid">${list.map(card).join("")}</div>`:`<div class="empty">No matches. Try a different title, artist or album.</div>`)}
+  else{h=`<h1>Discover and listen to your favorite music.</h1><p class="sub">Stream anything in the library. No downloads.</p>`;
+    if(!songs.length)h+=`<h2>Library</h2><div class="empty">No songs yet. Open Admin and upload your first track.</div>`;
+    else{const rec=[...songs].sort((a,b)=>b.date-a.date).slice(0,6);list=songs;
+      h+=`<h2>🆕 Recently added</h2><div class="grid">${rec.map(card).join("")}</div><h2>🎵 All songs</h2><div class="grid">${songs.map(card).join("")}</div>`;
+      const al=[...new Set(songs.map(s=>s.album).filter(Boolean))];if(al.length)h+=`<h2>💿 Albums</h2><div class="grid">`+al.map(a=>`<button class="song" data-album="${esc(a)}"><div class="art">💿</div><h3>${esc(a)}</h3><p>${songs.filter(s=>s.album===a).length} songs</p></button>`).join("")+`</div>`}}
+  $("#main").innerHTML=h;
+}
+$("#main").onclick=e=>{const b=e.target.closest(".song");if(!b)return;if(b.dataset.album){$("#q").value=b.dataset.album;render();return}play(songs.findIndex(s=>s.id===b.dataset.id))};
+$("#q").oninput=render;
+function play(i){if(i<0||!songs.length)return;cur=(i+songs.length)%songs.length;const s=songs[cur];au.src=url(s);au.play().catch(()=>{});
+  $("#bar").classList.add("show");$("#bt").innerHTML=art(s);$("#bT").textContent=s.title;$("#bA").textContent=s.artist;
+  $("#fa").innerHTML=art(s);$("#fT").textContent=s.title;$("#fA").textContent=s.artist+(s.album?" · "+s.album:"");
+  if("mediaSession"in navigator)navigator.mediaSession.metadata=new MediaMetadata({title:s.title,artist:s.artist,album:s.album||""});
+  queue();render()}
+function queue(){$("#queue").innerHTML=songs.map((s,i)=>`<button class="${i===cur?"on":""}" data-i="${i}">${esc(s.title)} <span class="sub">${esc(s.artist)}</span></button>`).join("")}
+$("#queue").onclick=e=>{const b=e.target.closest("button");if(b)play(+b.dataset.i)};
+const toggle=()=>au.paused?au.play():au.pause();
+["pp","pp2"].forEach(i=>$("#"+i).onclick=toggle);["prev","prev2"].forEach(i=>$("#"+i).onclick=()=>play(cur-1));["next","next2"].forEach(i=>$("#"+i).onclick=()=>play(cur+1));
+au.onplay=au.onpause=()=>{["pp","pp2"].forEach(i=>$("#"+i).textContent=au.paused?"▶":"⏸")};
+au.onended=()=>play(cur+1);
+au.ontimeupdate=()=>{const p=au.duration?au.currentTime/au.duration*100:0;["seek","seek2"].forEach(i=>$("#"+i).value=p);["cur","cur2"].forEach(i=>$("#"+i).textContent=fmt(au.currentTime))};
+au.onloadedmetadata=()=>["dur","dur2"].forEach(i=>$("#"+i).textContent=fmt(au.duration));
+["seek","seek2"].forEach(i=>$("#"+i).oninput=e=>{if(au.duration)au.currentTime=e.target.value/100*au.duration});
+$("#vol").oninput=e=>{au.volume=e.target.value;au.muted=false};$("#mute").onclick=()=>{au.muted=!au.muted;$("#mute").textContent=au.muted?"🔇":"🔊"};
+$("#open").onclick=()=>$("#full").classList.add("show");$("#close").onclick=()=>$("#full").classList.remove("show");
+// admin (prototype only: passcode check runs in the browser, so it is NOT secure)
+const D=$("#admin");
+$("#adminBtn").onclick=()=>{adminView();D.showModal()};
+function adminView(){
+  if(!admin){D.innerHTML=`<h2 style="margin-top:0">Admin login</h2><label>Email</label><input class="f" id="em" type="email" autocomplete="username"><label>Password</label><input class="f" id="pw" type="password" autocomplete="current-password"><p class="sub" id="err"></p><div class="row"><button class="btn" id="go">Log in</button><button class="btn ghost" id="x">Cancel</button></div>`;
+    $("#go").onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});if(error)$("#err").textContent="Login failed. Check your email and password.";else{admin=true;adminView()}};$("#x").onclick=()=>D.close();return}
+  const albums=new Set(songs.map(s=>s.album).filter(Boolean)).size;
+  D.innerHTML=`<div class="row"><h2 style="margin:0;flex:1">Dashboard</h2><button class="btn ghost" id="x">Close</button></div>
+  <div class="stats" style="margin-top:14px"><div><b>${songs.length}</b>Songs</div><div><b>${albums}</b>Albums</div></div>
+  <h2>Upload song</h2><label>Audio file (MP3, WAV, M4A, AAC)</label><input class="f" id="fa1" type="file" accept=".mp3,.wav,.m4a,.aac,audio/*">
+  <label>Title</label><input class="f" id="t1"><label>Artist</label><input class="f" id="a1"><label>Album</label><input class="f" id="al1"><label>Genre</label><input class="f" id="g1">
+  <label>Cover image</label><input class="f" id="c1" type="file" accept="image/*"><label>Description</label><input class="f" id="d1">
+  <div class="prog"><i id="pr"></i></div><p class="sub" id="ps"></p><button class="btn" id="up">Upload song</button>
+  <h2>Songs</h2>${songs.length?[...songs].sort((a,b)=>b.date-a.date).map(s=>`<div class="li"><span class="thumb">${art(s)}</span><span class="meta"><b>${esc(s.title)}</b><span>${esc(s.artist)}</span></span><button class="btn ghost" data-e="${s.id}">Edit</button><button class="btn danger" data-d="${s.id}">Delete</button></div>`).join(""):`<p class="sub">Nothing uploaded yet.</p>`}
+  <p><button class="btn ghost" id="lo">Log out</button></p>`;
+  $("#x").onclick=()=>D.close();$("#lo").onclick=async()=>{await sb.auth.signOut();admin=false;D.close()};$("#up").onclick=upload;
+  D.onclick=async e=>{const d=e.target.dataset;if(d.d){if(!confirm("Delete this song?"))return;if(songs[cur]&&songs[cur].id===d.d){au.pause();au.removeAttribute("src");$("#bar").classList.remove("show");cur=-1}await del(d.d);songs=songs.filter(s=>s.id!==d.d);render();adminView()}
+    if(d.e){const s=songs.find(x=>x.id===d.e),t=prompt("Title",s.title);if(t===null)return;s.title=t||s.title;s.artist=prompt("Artist",s.artist)||s.artist;s.album=prompt("Album",s.album||"")||"";await put(s);render();adminView()}}}
+const shrink=f=>new Promise(r=>{if(!f)return r(null);const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),z=Math.min(1,500/Math.max(im.width,im.height));c.width=im.width*z;c.height=im.height*z;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(r,"image/jpeg",.8)};im.onerror=()=>r(null);im.src=URL.createObjectURL(f)});
+const send=(bucket,path,file,onp)=>new Promise(async(res,rej)=>{const{data}=await sb.auth.getSession();if(!data.session)return rej(new Error("Please log in again"));const x=new XMLHttpRequest();x.open("POST",`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`);x.setRequestHeader("Authorization","Bearer "+data.session.access_token);x.setRequestHeader("apikey",SUPABASE_KEY);x.setRequestHeader("Content-Type",file.type||"application/octet-stream");x.upload.onprogress=e=>e.lengthComputable&&onp(e.loaded/e.total);x.onload=()=>x.status<300?res():rej(new Error(x.responseText));x.onerror=()=>rej(new Error("Network error"));x.send(file)});
+async function upload(){
+  const f=$("#fa1").files[0],ps=$("#ps");
+  if(!f)return ps.textContent="Choose an audio file first.";
+  if(!/\.(mp3|wav|m4a|aac)$/i.test(f.name))return ps.textContent="Unsupported format. Use MP3, WAV, M4A or AAC.";
+  if(f.size>50*1024*1024)return ps.textContent="File is over 50 MB. Compress it to MP3 first.";
+  const title=$("#t1").value.trim();if(!title)return ps.textContent="Add a song title.";
+  const btn=$("#up");btn.disabled=true;
+  try{
+    const ap=crypto.randomUUID()+"."+f.name.split(".").pop().toLowerCase();
+    await send("audio",ap,f,p=>{$("#pr").style.width=p*90+"%";ps.textContent=`Uploading... ${Math.round(p*90)}%`});
+    let cp=null;const cf=await shrink($("#c1").files[0]);
+    if(cf){cp=crypto.randomUUID()+".jpg";await send("covers",cp,cf,()=>{})}
+    const pub=(b,p)=>sb.storage.from(b).getPublicUrl(p).data.publicUrl;
+    const{error}=await sb.from("songs").insert({title,artist:$("#a1").value.trim()||"Unknown artist",album:$("#al1").value.trim()||null,genre:$("#g1").value.trim()||null,description:$("#d1").value.trim()||null,audio_path:ap,audio_url:pub("audio",ap),cover_path:cp,cover_url:cp?pub("covers",cp):null});
+    if(error)throw error;
+    songs=await all();render();adminView();
+    const t=document.createElement("div");t.className="toast";t.textContent="✓ Song uploaded successfully";document.body.append(t);setTimeout(()=>t.remove(),2500)
+  }catch(e){ps.textContent="Upload failed: "+(e.message||e);btn.disabled=false}}
+open().then(all).then(r=>{songs=r;render()});
+</script></body></html>
